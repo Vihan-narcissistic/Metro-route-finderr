@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Metro Route Finder | C++ Graph DSA Engine</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>🚇</text></svg>">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="4" y="3" width="16" height="16" rx="2"/>
+            <path d="M4 11h16"/>
+            <path d="M12 3v8"/>
+            <path d="m8 19-2 3"/>
+            <path d="m16 19 2 3"/>
+            <circle cx="8" cy="15" r="1"/>
+            <circle cx="16" cy="15" r="1"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Metro Route Finder</h1>
+          <p class="tagline">Delhi Metro DSA Simulation &bull; Powered by Native C++ Engine</p>
+        </div>
+      </div>
+      <div class="system-status">
+        <span class="status-indicator live" id="backend-status-dot"></span>
+        <span id="backend-status-text">C++ Winsock Backend: 127.0.0.1:8080</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Quick Stats Bar -->
+  <section class="stats-bar">
+    <div class="stats-container">
+      <div class="stat-card">
+        <span class="stat-label">Total Stations</span>
+        <span class="stat-value" id="stat-total-stations">8</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Active Lines</span>
+        <div class="line-chips" id="stat-active-lines">
+          <span class="chip chip-blue">Blue</span>
+          <span class="chip chip-yellow">Yellow</span>
+          <span class="chip chip-violet">Violet</span>
+          <span class="chip chip-red">Red</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Interchanges</span>
+        <span class="stat-value" id="stat-interchanges">4 Stations</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Graph Routing</span>
+        <span class="stat-value code-font">Dijkstra Min-Heap</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Layout -->
+  <main class="main-container">
+    <!-- Navigation Tabs -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="tab-planner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+        Route Planner
+      </button>
+      <button class="tab-btn" data-tab="tab-traversal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+        BFS & DFS Traversal
+      </button>
+      <button class="tab-btn" data-tab="tab-network">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+        Metro Map & Stations
+      </button>
+      <button class="tab-btn" data-tab="tab-manage">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="tab-icon"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Add Station & Track
+      </button>
+    </nav>
+
+    <!-- TAB 1: Route Planner -->
+    <section class="tab-pane active" id="tab-planner">
+      <div class="planner-grid">
+        <!-- Input Form Card -->
+        <div class="card form-card">
+          <div class="card-header">
+            <h2>Find Optimal Route</h2>
+            <span class="badge badge-primary">Dijkstra Shortest Path</span>
+          </div>
+
+          <form id="route-form">
+            <div class="input-group">
+              <label for="source-select">
+                <span class="dot-indicator origin"></span> Source Station
+              </label>
+              <select id="source-select" required>
+                <option value="" disabled selected>Loading stations from C++...</option>
+              </select>
+            </div>
+
+            <div class="swap-wrapper">
+              <button type="button" id="swap-stations-btn" title="Swap Stations" aria-label="Swap Stations">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 10 12 15 17 10"/><polyline points="17 14 12 9 7 14"/></svg>
+                <span>Swap</span>
+              </button>
+            </div>
+
+            <div class="input-group">
+              <label for="dest-select">
+                <span class="dot-indicator dest"></span> Destination Station
+              </label>
+              <select id="dest-select" required>
+                <option value="" disabled selected>Loading stations from C++...</option>
+              </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="find-route-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              Find Shortest Route
+            </button>
+          </form>
+
+          <!-- Quick Sample Routes -->
+          <div class="sample-routes">
+            <span class="sample-label">Sample routes to test:</span>
+            <div class="sample-chips">
+              <button class="sample-chip" data-from="Karol Bagh" data-to="Central Secretariat">Karol Bagh &rarr; Central Sec</button>
+              <button class="sample-chip" data-from="Rajiv Chowk" data-to="Kashmere Gate">Rajiv Chowk &rarr; Kashmere Gate</button>
+              <button class="sample-chip" data-from="Mandi House" data-to="Chandni Chowk">Mandi House &rarr; Chandni Chowk</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Result Card -->
+        <div class="card result-card" id="route-result-container">
+          <div class="placeholder-state" id="result-placeholder">
+            <div class="placeholder-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6Z"/></svg>
+            </div>
+            <h3>Ready to Route</h3>
+            <p>Select your starting station and destination to calculate the shortest path, fare, and line transfers in C++.</p>
+          </div>
+
+          <div class="result-content hidden" id="result-details">
+            <!-- Summary Header -->
+            <div class="result-summary">
+              <div class="summary-metric">
+                <span class="metric-title">Shortest Distance</span>
+                <span class="metric-value"><strong id="res-distance">--</strong> <span class="unit">km</span></span>
+                <span class="metric-meta">Dijkstra Min-Heap</span>
+              </div>
+              <div class="summary-metric">
+                <span class="metric-title">Estimated Fare</span>
+                <span class="metric-value text-accent">&#8377;<strong id="res-fare">--</strong></span>
+                <span class="metric-meta">C++ Fare Rule</span>
+              </div>
+              <div class="summary-metric">
+                <span class="metric-title">Est. Travel Time</span>
+                <span class="metric-value"><strong id="res-time">--</strong> <span class="unit">min</span></span>
+                <span class="metric-meta">2 min/km + 5 min/transfer</span>
+              </div>
+              <div class="summary-metric">
+                <span class="metric-title">Interchanges</span>
+                <span class="metric-value" id="res-interchanges-badge"><strong id="res-interchanges">0</strong></span>
+                <span class="metric-meta">DP Line Optimization</span>
+              </div>
+            </div>
+
+            <!-- Interchange Alert Box if any transfers -->
+            <div class="interchange-alert" id="interchange-alert-box">
+              <!-- Dynamically inserted interchange notices -->
+            </div>
+
+            <!-- Visual Route Timeline -->
+            <div class="timeline-container">
+              <h3 class="timeline-title">Route Journey Timeline</h3>
+              <div class="route-timeline" id="route-timeline-steps">
+                <!-- Dynamically generated timeline nodes -->
+              </div>
+            </div>
+
+            <!-- DSA Algorithms Technical Explanation Card -->
+            <div class="dsa-explainer">
+              <div class="explainer-header">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                <h4>DSA Architecture Breakdown (Executed in C++)</h4>
+              </div>
+              <div class="explainer-grid">
+                <div class="explainer-item">
+                  <strong>1. Dijkstra's Algorithm (Distance)</strong>
+                  <p>Uses an adjacency list with <code>std::priority_queue</code> (min-heap) to compute the minimal Euclidean path in <code>O((V + E) log V)</code>.</p>
+                </div>
+                <div class="explainer-item">
+                  <strong>2. Dynamic Programming (Line Transfers)</strong>
+                  <p>Keeps the shortest-distance path fixed while optimizing transit line selection across route hops to minimize rider transfers via DP.</p>
+                </div>
+                <div class="explainer-item">
+                  <strong>3. Fare Policy Calculation</strong>
+                  <p>Computed strictly in C++: Base &#8377;10 for &le; 2 km, plus &#8377;5 per 2 km interval.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: BFS & DFS Graph Traversal -->
+    <section class="tab-pane" id="tab-traversal">
+      <div class="traversal-grid">
+        <div class="card form-card">
+          <div class="card-header">
+            <h2>Graph Traversal Engine</h2>
+            <span class="badge badge-accent">BFS vs DFS in C++</span>
+          </div>
+          <p class="section-desc">Explore how standard computer science graph traversal algorithms visit nodes across the metro network from any selected starting station.</p>
+
+          <form id="traversal-form">
+            <div class="input-group">
+              <label for="traversal-start-select">
+                <span class="dot-indicator origin"></span> Starting Metro Station
+              </label>
+              <select id="traversal-start-select" required></select>
+            </div>
+
+            <div class="input-group">
+              <label>Select Graph Algorithm</label>
+              <div class="algo-toggle-group">
+                <label class="algo-radio">
+                  <input type="radio" name="traversal-algo" value="bfs" checked>
+                  <div class="radio-card">
+                    <span class="algo-name">Breadth-First Search (BFS)</span>
+                    <span class="algo-meta">Queue (FIFO) &bull; Level-by-level</span>
+                  </div>
+                </label>
+                <label class="algo-radio">
+                  <input type="radio" name="traversal-algo" value="dfs">
+                  <div class="radio-card">
+                    <span class="algo-name">Depth-First Search (DFS)</span>
+                    <span class="algo-meta">Stack (LIFO) &bull; Deep branch first</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-accent btn-block" id="run-traversal-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Run Traversal in C++
+            </button>
+          </form>
+
+          <div class="dsa-comparison-card">
+            <h4>Algorithm Comparison</h4>
+            <table>
+              <thead>
+                <tr>
+                  <th>Property</th>
+                  <th>BFS</th>
+                  <th>DFS</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Data Structure</td>
+                  <td><code>std::queue</code></td>
+                  <td><code>std::stack</code></td>
+                </tr>
+                <tr>
+                  <td>Order</td>
+                  <td>FIFO (Level-order)</td>
+                  <td>LIFO (Depth-first)</td>
+                </tr>
+                <tr>
+                  <td>Time Complexity</td>
+                  <td><code>O(V + E)</code></td>
+                  <td><code>O(V + E)</code></td>
+                </tr>
+                <tr>
+                  <td>Application</td>
+                  <td>Shortest hops</td>
+                  <td>Cycle & connectivity</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card result-card">
+          <div class="card-header">
+            <h3>Traversal Execution Visualizer</h3>
+            <span class="badge" id="traversal-algo-badge">Awaiting Execution</span>
+          </div>
+
+          <div id="traversal-placeholder" class="placeholder-state">
+            <div class="placeholder-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            </div>
+            <h3>Run Traversal</h3>
+            <p>Select a starting station and algorithm to view the order of visited nodes calculated in C++.</p>
+          </div>
+
+          <div id="traversal-results" class="hidden">
+            <div class="traversal-meta-bar">
+              <div><strong>Start Node:</strong> <span id="traversal-start-node"></span></div>
+              <div><strong>Time Complexity:</strong> <code id="traversal-complexity">O(V + E)</code></div>
+              <div><strong>Total Visited:</strong> <span id="traversal-count">0</span> stations</div>
+            </div>
+
+            <div class="explanation-box" id="traversal-explanation"></div>
+
+            <h4 class="mt-4">Visited Sequence Order:</h4>
+            <div class="traversal-sequence" id="traversal-sequence-container">
+              <!-- Dynamically populated sequence pills -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: Network Map & Stations -->
+    <section class="tab-pane" id="tab-network">
+      <div class="network-layout">
+        <!-- SVG Interactive Metro Network Map -->
+        <div class="card map-card">
+          <div class="card-header map-header-flex">
+            <div>
+              <h2>Interactive Metro Network Graph</h2>
+              <p class="card-subtitle">Accurate visual graph of C++ adjacency list, physical lines, and track distances. Click any station to inspect.</p>
+            </div>
+            <!-- Zoom & Pan Controls -->
+            <div class="map-toolbar">
+              <button type="button" class="tool-btn" id="map-zoom-in" title="Zoom In">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+              </button>
+              <button type="button" class="tool-btn" id="map-zoom-out" title="Zoom Out">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+              </button>
+              <button type="button" class="tool-btn" id="map-zoom-reset" title="Reset View">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                <span>Reset</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Visual Legend -->
+          <div class="map-legend-bar">
+            <span class="legend-title">Lines:</span>
+            <span class="legend-pill"><span class="legend-swatch" style="background: #0072CE;"></span> Blue Line</span>
+            <span class="legend-pill"><span class="legend-swatch" style="background: #FFC600;"></span> Yellow Line</span>
+            <span class="legend-pill"><span class="legend-swatch" style="background: #8B2671;"></span> Violet Line</span>
+            <span class="legend-pill"><span class="legend-swatch" style="background: #D9262E;"></span> Red Line</span>
+            <span class="legend-sep">|</span>
+            <span class="legend-pill"><span class="legend-icon-interchange"></span> Interchange Hub</span>
+            <span class="legend-pill"><span class="legend-icon-isolated"></span> Isolated (No Track)</span>
+            <span class="legend-pill"><span class="legend-distance-tag">2 km</span> Track Distance</span>
+          </div>
+
+          <!-- SVG Canvas Wrapper -->
+          <div class="svg-map-wrapper" id="svg-map-wrapper">
+            <svg id="metro-svg-canvas" viewBox="0 0 960 560" preserveAspectRatio="xMidYMid meet">
+              <!-- SVG map will be rendered dynamically by script.js -->
+            </svg>
+            <div class="map-hint">Scroll to Zoom &bull; Drag to Pan &bull; Click Node to Inspect</div>
+          </div>
+
+          <!-- Station Inspector Card (Appears on station click) -->
+          <div class="station-inspector" id="station-inspector">
+            <div class="inspector-prompt" id="inspector-prompt">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <span>Click on any metro station in the graph above to view its details, connected lines, and neighbor links.</span>
+            </div>
+            <div class="inspector-details hidden" id="inspector-details">
+              <div class="inspector-header">
+                <div>
+                  <h3 id="inspect-name">Rajiv Chowk</h3>
+                  <div class="inspector-sub">
+                    <span class="badge" id="inspect-badge">Interchange Station</span>
+                    <span class="inspect-coords" id="inspect-status-text">Connected</span>
+                  </div>
+                </div>
+                <button type="button" class="btn-close-inspect" id="inspect-close" title="Deselect">&times;</button>
+              </div>
+
+              <div class="inspector-body">
+                <div class="inspector-section">
+                  <span class="inspect-label">Passing Metro Lines:</span>
+                  <div class="line-chips" id="inspect-lines-chips"></div>
+                </div>
+
+                <div class="inspector-section">
+                  <span class="inspect-label">Adjacent Track Connections (from C++ Adjacency List):</span>
+                  <div class="inspect-neighbors-list" id="inspect-neighbors-list"></div>
+                </div>
+              </div>
+
+              <div class="inspector-footer">
+                <button type="button" class="btn btn-sm btn-primary" id="inspect-btn-origin">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m12 8-4 4 4 4"/><path d="M16 12H8"/></svg>
+                  Set as Origin
+                </button>
+                <button type="button" class="btn btn-sm btn-accent" id="inspect-btn-dest">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m12 16 4-4-4-4"/><path d="M8 12h8"/></svg>
+                  Set as Destination
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary" id="inspect-btn-traversal">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  Run Traversal from Here
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Station Catalog Cards -->
+        <div class="card stations-catalog-card">
+          <div class="card-header">
+            <h2>Station Directory & Lines</h2>
+            <input type="text" id="station-search-input" placeholder="Search stations..." class="search-input">
+          </div>
+          <div class="stations-grid" id="stations-catalog-grid">
+            <!-- Dynamically populated from /api/stations -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: Add Station & Track Management -->
+    <section class="tab-pane" id="tab-manage">
+      <div class="manage-grid">
+        <!-- Add Station Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Add New Metro Station</h2>
+            <span class="badge badge-success">C++ Graph Update</span>
+          </div>
+          <p class="section-desc">Extends the C++ Graph adjacency list and maps station lines in <code>Metro</code> memory.</p>
+          <form id="add-station-form">
+            <div class="input-group">
+              <label for="new-station-name">Station Name</label>
+              <input type="text" id="new-station-name" placeholder="e.g. AIIMS, Hauz Khas, Noida Sec 18" required>
+            </div>
+            <div class="input-group">
+              <label for="new-station-line">Metro Line</label>
+              <select id="new-station-line">
+                <option value="Yellow Line">Yellow Line</option>
+                <option value="Blue Line">Blue Line</option>
+                <option value="Violet Line">Violet Line</option>
+                <option value="Red Line">Red Line</option>
+                <option value="Magenta Line">Magenta Line</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-success btn-block">Add Station to C++</button>
+          </form>
+        </div>
+
+        <!-- Add Connection Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2>Add Metro Track Connection</h2>
+            <span class="badge badge-primary">Weighted Edge Addition</span>
+          </div>
+          <p class="section-desc">Adds an undirected weighted edge <code>(u, v, weight)</code> to <code>vector&lt;vector&lt;pair&lt;int,int&gt;&gt;&gt; adj</code> in C++.</p>
+          <form id="add-connection-form">
+            <div class="input-group">
+              <label for="conn-s1">First Station</label>
+              <select id="conn-s1" required></select>
+            </div>
+            <div class="input-group">
+              <label for="conn-s2">Second Station</label>
+              <select id="conn-s2" required></select>
+            </div>
+            <div class="input-group">
+              <label for="conn-dist">Distance (km)</label>
+              <input type="number" id="conn-dist" min="1" max="100" placeholder="e.g. 3" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Add Connection to C++</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Notification Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <p>Metro Route Finder &bull; College DSA Project &bull; Core algorithms (Dijkstra, BFS, DFS, DP) executing in native C++.</p>
+      <p class="footer-meta">Backend: Winsock2 HTTP Server on <code>http://127.0.0.1:8080</code></p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -119,11 +119,9 @@ g++ -std=c++14 server.cpp Graph.cpp Metro.cpp -o metro_server.exe -lws2_32
 #### Step 4: Open in Web Browser
 Open your browser and navigate to:
 ```text
-http://localhost:8080
+(https://metro-route-finderr.onrender.com)
 ```
-*(Custom port can be set via `$env:PORT="9000"; .\metro_server.exe`)*.
 
----
 
 ### Option B: Build and Run with Docker (Linux / Cloud / Render)
 
@@ -138,7 +136,7 @@ docker run -d -p 8080:8080 -e PORT=8080 --name metro-app metro-route-finder
 ```
 
 #### Step 3: Access the Web App
-Open your browser at `http://localhost:8080`.
+Open your browser at `https://metro-route-finderr.onrender.com`.
 
 ---
 
@@ -150,7 +148,7 @@ On any Linux machine (Ubuntu, Debian, Fedora, Arch):
 g++ -std=c++14 -O2 server.cpp Graph.cpp Metro.cpp -o metro_server
 
 # Run
-PORT=8080 ./metro_server
+(https://metro-route-finderr.onrender.com)
 ```
 
 ---
